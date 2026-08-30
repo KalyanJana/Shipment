@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 
+from learning.database.models import Shipment
 from learning.dependencies import ServiceDep
-from learning.schemas.shipment import Shipment, ShipmentCreate, ShipmentUpdate
+from learning.schemas.shipment import ShipmentCreate, ShipmentUpdate
 
 router = APIRouter(prefix="/shipment", tags=["Shipment"])
 

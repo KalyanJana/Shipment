@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from learning.database.models import ShipmentStatus
-from learning.schemas.shipment import Shipment, ShipmentCreate, ShipmentUpdate
+from learning.database.models import Shipment, ShipmentStatus
+from learning.schemas.shipment import ShipmentCreate, ShipmentUpdate
 
 
 class ShipmentService:
