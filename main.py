@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from scalar_fastapi import get_scalar_api_reference
 
-from learning.api.router import router
+from learning.api.router import master_router
 from learning.database.session import create_db_tables
 
 
@@ -18,7 +18,7 @@ async def lifespan_handler(app: FastAPI):
 
 app = FastAPI(lifespan= lifespan_handler)
 
-app.include_router(router)
+app.include_router(master_router)
 
 # Fixed Scalar Documentation Route
 @app.get("/scalar", response_class=HTMLResponse, include_in_schema=True)

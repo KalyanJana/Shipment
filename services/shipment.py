@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from learning.database.models import Shipment, ShipmentStatus
-from learning.schemas.shipment import ShipmentCreate, ShipmentUpdate
+from learning.api.schemas.shipment import ShipmentCreate, ShipmentUpdate
 
 
 class ShipmentService:
     def __init__(self, session: AsyncSession):
-        self.session = session
+        self.session = session #Get database session to perform databse operations
 
     async def get(self, id: int) -> Shipment | None:
         return await self.session.get(Shipment, id)

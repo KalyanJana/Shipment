@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Any
 
-from .schemas.shipment import ShipmentCreate, ShipmentUpdate
+from .api.schemas.shipment import ShipmentCreate, ShipmentUpdate
 
 
 class Database:

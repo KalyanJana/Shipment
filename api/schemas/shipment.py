@@ -11,8 +11,8 @@ class BaseShipment(BaseModel):
     destination: int
 
 
-class Shipment(BaseShipment):
-    id: int = Field(default=None, primary_key=True)
+class ShipmentRead(BaseShipment):
+    id: int
     status: ShipmentStatus
     estimated_delivery: datetime
 
