@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
-from learning.config import settings
+from learning.config import db_settings as settings
 
 engine = create_async_engine(
     url=settings.POSTGRES_URL,

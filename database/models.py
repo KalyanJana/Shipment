@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import EmailStr
-from sqlmodel import Field, SQLModel
+from sqlmodel import Column, DateTime, Field, SQLModel
 
 
 class ShipmentStatus(str, Enum):
@@ -20,7 +20,10 @@ class Shipment(SQLModel, table=True):
     weight: float = Field(lt=25)
     destination: int
     status: ShipmentStatus
-    estimated_delivery: datetime
+    # Explicitly set timezone=True for PostgreSQL TIMESTAMPTZ
+    estimated_delivery: datetime = Field(
+        sa_column=Column(DateTime(timezone=True))
+    )
 
 class Seller(SQLModel, table=True):
     __tablename__ = "seller"

@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from learning.database.models import Shipment, ShipmentStatus
 from learning.api.schemas.shipment import ShipmentCreate, ShipmentUpdate
+from learning.database.models import Shipment, ShipmentStatus
 
 
 class ShipmentService:
     def __init__(self, session: AsyncSession):
-        self.session = session #Get database session to perform databse operations
+        self.session = session  # Get database session to perform databse operations
 
     async def get(self, id: int) -> Shipment | None:
         return await self.session.get(Shipment, id)
@@ -17,7 +17,7 @@ class ShipmentService:
         new_shipment = Shipment(
             **shipment_create.model_dump(),
             status=ShipmentStatus.placed,
-            estimated_delivery=datetime.now() + timedelta(days=3),
+            estimated_delivery=datetime.now(timezone.utc) + timedelta(days=3),
         )
 
         self.session.add(new_shipment)

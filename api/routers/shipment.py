@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from learning.api.dependencies import ShipmentServiceDep
+from learning.api.dependencies import SellerDep, ShipmentServiceDep
 from learning.api.schemas.shipment import ShipmentCreate, ShipmentUpdate
 from learning.database.models import Shipment
 
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/shipment", tags=["Shipment"])
 
 
 @router.get("/", response_model=Shipment)
-async def get_shipment(id: int, service: ShipmentServiceDep):
+async def get_shipment(id: int, seller: SellerDep, service: ShipmentServiceDep):
     shipment = await service.get(id)
 
     if shipment is None:
@@ -20,7 +20,11 @@ async def get_shipment(id: int, service: ShipmentServiceDep):
 
 
 @router.post("/")
-async def submit_shipment(shipment: ShipmentCreate, service: ShipmentServiceDep) -> Shipment:
+async def submit_shipment(
+    seller: SellerDep,
+    shipment: ShipmentCreate, 
+    service: ShipmentServiceDep
+) -> Shipment:
     try:
         return await service.add(shipment)
     except Exception as exc:

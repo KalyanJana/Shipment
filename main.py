@@ -16,7 +16,10 @@ async def lifespan_handler(app: FastAPI):
     print("... stopped!")
 
 
-app = FastAPI(lifespan= lifespan_handler)
+app = FastAPI(
+    lifespan= lifespan_handler,
+    servers=[{"url": "http://127.0.0.1:8000", "description": "Local server"}]
+)
 
 app.include_router(master_router)
 
