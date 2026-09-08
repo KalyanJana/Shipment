@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from learning.core.security import oauth2_scheme
 from learning.database.models import Seller
+from learning.database.redis import is_jti_backlisted
 from learning.database.session import get_session
 from learning.services.seller import SellerService
 from learning.services.shipment import ShipmentService
@@ -14,10 +15,10 @@ from learning.utils import decode_access_token
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 #Access token data dep
-def get_access_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
+async def get_access_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
     data = decode_access_token(token)
 
-    if data is None:
+    if data is None or await is_jti_backlisted(data["jti"]):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token"

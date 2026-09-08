@@ -7,19 +7,18 @@ from fastapi import HTTPException, status
 from learning.config import security_settings
 
 
-def generate_access_token(data: dict, expiry: timedelta = timedelta(hours=15)) -> str:
-    payload = data.copy()
-    payload.update({
-        "jti": str(uuid4()),
-        "exp": datetime.now(timezone.utc) + expiry
-    })
-    
+def generate_access_token(data: dict, expiry: timedelta = timedelta(hours=1)) -> str:
+   
     return jwt.encode(
-        payload=payload,
+        payload={
+            **data,
+            "jti": str(uuid4()),
+            "exp": datetime.now(timezone.utc) + expiry
+        },
         key=security_settings.JWT_SECRET,
         algorithm=security_settings.JWT_ALGORITHM  # singular algorithm
     )
-    
+
 def decode_access_token(token: str)-> dict | None:
     try:
         return jwt.decode(
