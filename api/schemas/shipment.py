@@ -22,8 +22,5 @@ class ShipmentCreate(BaseShipment):
 
 
 class ShipmentUpdate(BaseModel):
-    content: str | None = Field(default=None)
-    weight: float | None = Field(default=0, le=25)
-    destination: int | None = Field(default=0)
     status: ShipmentStatus | None = Field(default=None)
     estimated_delivery: datetime | None = Field(default=None)

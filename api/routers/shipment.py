@@ -1,59 +1,140 @@
-from fastapi import APIRouter, HTTPException, status
+from uuid import UUID
 
-from learning.api.dependencies import SellerDep, ShipmentServiceDep
-from learning.api.schemas.shipment import ShipmentCreate, ShipmentUpdate
+from fastapi import APIRouter, status
+
+from learning.api.dependencies import (
+    DeliveryPartnerDep,
+    SellerDep,
+    ShipmentServiceDep,
+)
+from learning.api.schemas.shipment import (
+    ShipmentCreate,
+    ShipmentUpdate,
+)
 from learning.database.models import Shipment
 
-router = APIRouter(prefix="/shipment", tags=["Shipment"])
+
+router = APIRouter(
+    prefix="/shipment",
+    tags=["Shipment"],
+)
 
 
-@router.get("/", response_model=Shipment)
-async def get_shipment(id: int, seller: SellerDep, service: ShipmentServiceDep):
+@router.get(
+    "/{id}",
+    response_model=Shipment,
+)
+async def get_shipment(
+    id: UUID,
+    seller: SellerDep,
+    service: ShipmentServiceDep,
+):
+
     shipment = await service.get(id)
 
     if shipment is None:
+        from fastapi import HTTPException
+
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Given id does not exist!"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shipment not found",
+        )
+
+    # Important:
+    # Seller should only see his own shipment.
+    if shipment.seller_id != seller.id:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You cannot access this shipment",
         )
 
     return shipment
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=Shipment,
+    status_code=status.HTTP_201_CREATED,
+)
 async def submit_shipment(
+    shipment: ShipmentCreate,
     seller: SellerDep,
-    shipment: ShipmentCreate, 
-    service: ShipmentServiceDep
-) -> Shipment:
-    try:
-        return await service.add(shipment)
-    except Exception as exc:
-        import traceback
+    service: ShipmentServiceDep,
+):
 
-        traceback.print_exc()
+    return await service.add(
+        shipment,
+        seller.id,
+    )
+
+
+@router.patch(
+    "/{id}",
+    response_model=Shipment,
+)
+async def patch_shipment(
+    id: UUID,
+    shipment_update: ShipmentUpdate,
+    seller: SellerDep,
+    service: ShipmentServiceDep,
+):
+
+    shipment = await service.get(id)
+
+    if shipment is None:
+        from fastapi import HTTPException
+
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error while creating shipment: {exc}",
-        ) from exc
-
-
-@router.patch("/", response_model=Shipment)
-async def patch_shipment(id: int, shipment_update: ShipmentUpdate, service: ShipmentServiceDep):
-    update = shipment_update.model_dump(exclude_none=True)
-
-    if not update:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided to update"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shipment not found",
         )
 
-    shipment = await service.update(id, update)
+    if shipment.seller_id != seller.id:
+        from fastapi import HTTPException
 
-    return shipment
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You cannot update this shipment",
+        )
+
+    return await service.update(
+        id,
+        shipment_update,
+    )
 
 
-@router.delete("/")
-async def delete_shipment(id: int, service: ShipmentServiceDep) -> dict[str, str]:
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+)
+async def delete_shipment(
+    id: UUID,
+    seller: SellerDep,
+    service: ShipmentServiceDep,
+):
+
+    shipment = await service.get(id)
+
+    if shipment is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shipment not found",
+        )
+
+    if shipment.seller_id != seller.id:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You cannot delete this shipment",
+        )
 
     await service.delete(id)
 
-    return {"detail": f"Shipment with id #{id} is deleted!"}
+    return {
+        "detail": f"Shipment with id #{id} is deleted!"
+    }

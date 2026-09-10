@@ -10,23 +10,43 @@ from learning.database.session import create_db_tables
 
 @asynccontextmanager
 async def lifespan_handler(app: FastAPI):
+
+    print("Starting server...")
+
     await create_db_tables()
-    print("server started...")
-    yield 
-    print("... stopped!")
+
+    print("Database ready")
+    print("Server started")
+
+    yield
+
+    print("Server stopped")
 
 
 app = FastAPI(
-    lifespan= lifespan_handler,
-    servers=[{"url": "http://127.0.0.1:8000", "description": "Local server"}]
+    title="Shipment Service",
+    version="1.0.0",
+    lifespan=lifespan_handler,
+    servers=[
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Local server",
+        }
+    ],
 )
+
 
 app.include_router(master_router)
 
-# Fixed Scalar Documentation Route
-@app.get("/scalar", response_class=HTMLResponse, include_in_schema=True)
+
+@app.get(
+    "/scalar",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
 def get_scalar_docs():
+
     return get_scalar_api_reference(
-        openapi_url="/openapi.json", # Pass path string directly
-        title="Shipment Service API Reference"
+        openapi_url="/openapi.json",
+        title="Shipment Service API Reference",
     )

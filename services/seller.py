@@ -1,52 +1,40 @@
-from fastapi import HTTPException, status
-from passlib.context import CryptContext
-from sqlalchemy import select
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from learning.api.schemas.seller import SellerCreate
 from learning.database.models import Seller
-from learning.utils import generate_access_token
-
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from learning.services.user import UserService
 
 
-class SellerService:
+class SellerService(UserService):
+
     def __init__(self, session: AsyncSession):
-        self.session = session  # Get database session to perform databse operations
+        super().__init__(Seller, session)
 
-    async def add(self, credentials: SellerCreate) -> Seller:
-        seller = Seller(
-            **credentials.model_dump(exclude=["password"]),
-            password_hash=password_context.hash(
-                credentials.password
-            ),  # passwrod hashed and stored in seller
+    async def add(
+        self,
+        seller_create: SellerCreate,
+    ) -> Seller:
+
+        data = seller_create.model_dump()
+
+        return await self._add_user(data)
+
+    async def token(
+        self,
+        email: str,
+        password: str,
+    ) -> str:
+
+        return await self._generate_token(
+            email,
+            password,
         )
 
-        self.session.add(seller)
-        await self.session.commit()
-        await self.session.refresh(seller)
+    async def delete(
+        self,
+        id: UUID,
+    ):
 
-        return seller
-
-    async def token(self, email: str, password: str) -> str:
-        # validate the credentials
-        result = await self.session.execute(
-            select(Seller).where(Seller.email == email)
-        )
-        # Use scalar_one_or_none() instead of scalar()
-        seller = result.scalar_one_or_none()
-
-        if seller is None or not password_context.verify(
-            password, seller.password_hash
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Email or password is incorrect",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        token = generate_access_token(
-            data={"user": {"name": seller.name, "id": seller.id}}
-        )
-
-        return token
+        return await self.delete_user(id)
