@@ -1,29 +1,15 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
-from learning.api.dependencies import (
-    DeliveryPartnerDep,
-    SellerDep,
-    ShipmentServiceDep,
-)
-from learning.api.schemas.shipment import (
-    ShipmentCreate,
-    ShipmentUpdate,
-)
+from learning.api.dependencies import DeliveryPartnerDep, SellerDep, ShipmentServiceDep
+from learning.api.schemas.shipment import ShipmentCreate, ShipmentRead, ShipmentUpdate
 from learning.database.models import Shipment
 
-
-router = APIRouter(
-    prefix="/shipment",
-    tags=["Shipment"],
-)
+router = APIRouter(prefix="/shipment", tags=["Shipment"])
 
 
-@router.get(
-    "/{id}",
-    response_model=Shipment,
-)
+@router.get("/{id}", response_model=Shipment)
 async def get_shipment(
     id: UUID,
     seller: SellerDep,
@@ -53,62 +39,36 @@ async def get_shipment(
     return shipment
 
 
-@router.post(
-    "/",
-    response_model=Shipment,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/", response_model=ShipmentRead, status_code=status.HTTP_201_CREATED)
 async def submit_shipment(
     shipment: ShipmentCreate,
     seller: SellerDep,
     service: ShipmentServiceDep,
 ):
-
-    return await service.add(
-        shipment,
-        seller.id,
-    )
+    return await service.add(shipment, seller)
 
 
-@router.patch(
-    "/{id}",
-    response_model=Shipment,
-)
-async def patch_shipment(
+@router.patch("/", response_model=ShipmentRead)
+async def update_shipment(
     id: UUID,
     shipment_update: ShipmentUpdate,
-    seller: SellerDep,
+    partner: DeliveryPartnerDep,
     service: ShipmentServiceDep,
 ):
 
-    shipment = await service.get(id)
+    # update data with given fields
+    update = shipment_update.model_dump(exclude_none=True)
 
-    if shipment is None:
-        from fastapi import HTTPException
-
+    if not update:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shipment not found",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No data provided to update",
         )
 
-    if shipment.seller_id != seller.id:
-        from fastapi import HTTPException
-
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You cannot update this shipment",
-        )
-
-    return await service.update(
-        id,
-        shipment_update,
-    )
+    return await service.update(id, shipment_update, partner)
 
 
-@router.delete(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-)
+@router.delete("/")
 async def delete_shipment(
     id: UUID,
     seller: SellerDep,
@@ -135,6 +95,14 @@ async def delete_shipment(
 
     await service.delete(id)
 
-    return {
-        "detail": f"Shipment with id #{id} is deleted!"
-    }
+    return {"detail": f"Shipment with id #{id} is deleted!"}
+
+
+@router.get("/{id}/cancel", response_model=ShipmentRead)
+async def cancel_shipment(
+    id: UUID,
+    seller: SellerDep,
+    service: ShipmentServiceDep,
+):
+
+    return await service.cancel(id, seller)

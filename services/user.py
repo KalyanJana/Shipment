@@ -7,11 +7,7 @@ from learning.database.models import User
 from learning.services.base import BaseService
 from learning.utils import generate_access_token
 
-password_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-)
-
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserService(BaseService):
 
@@ -32,11 +28,7 @@ class UserService(BaseService):
 
         return await self._add(user)
 
-    async def _get_by_email(
-        self,
-        email: str,
-    ) -> User | None:
-
+    async def _get_by_email(self, email: str) -> User | None:
         return await self.session.scalar(
             select(self.model).where(
                 self.model.email == email

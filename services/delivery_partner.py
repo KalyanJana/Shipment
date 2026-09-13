@@ -39,6 +39,7 @@ class DeliveryPartnerService(UserService):
             .where(
                 Shipment.delivery_partner_id == partner_id,
                 Shipment.status != ShipmentStatus.delivered,
+                Shipment.status != ShipmentStatus.cancelled,
             )
         )
 
@@ -75,29 +76,13 @@ class DeliveryPartnerService(UserService):
             detail="No delivery partner available",
         )
 
-    async def update(
-        self,
-        partner: DeliveryPartner,
-    ) -> DeliveryPartner:
-
+    async def update(self, partner: DeliveryPartner) -> DeliveryPartner:
         return await self._update(partner)
 
-    async def token(
-        self,
-        email: str,
-        password: str,
-    ) -> str:
+    async def token(self, email: str, password: str) -> str:
+        return await self._generate_token(email, password)
 
-        return await self._generate_token(
-            email,
-            password,
-        )
-
-    async def delete(
-        self,
-        id: UUID,
-    ):
-
+    async def delete(self, id: UUID):
         partner = await self._get(id)
 
         if partner is None:

@@ -4,19 +4,13 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from learning.core.security import (
-    oauth2_scheme_partner,
-    oauth2_scheme_seller,
-)
-from learning.database.models import (
-    DeliveryPartner,
-    Seller,
-)
+from learning.core.security import oauth2_scheme_partner, oauth2_scheme_seller
+
+from learning.database.models import DeliveryPartner, Seller
 from learning.database.redis import is_jti_blacklisted
 from learning.database.session import get_session
-from learning.services.delivery_partner import (
-    DeliveryPartnerService,
-)
+from learning.services.delivery_partner import DeliveryPartnerService
+from learning.services.shipment_event import ShipmentEventService
 from learning.services.seller import SellerService
 from learning.services.shipment import ShipmentService
 from learning.utils import decode_access_token
@@ -133,13 +127,12 @@ async def get_current_partner(
     return partner
 
 
-def get_shipment_service(
-    session: SessionDep,
-):
+def get_shipment_service(session: SessionDep):
 
     return ShipmentService(
         session,
         DeliveryPartnerService(session),
+        ShipmentEventService(session)
     )
 
 

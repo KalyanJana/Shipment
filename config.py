@@ -18,7 +18,7 @@ class DatabaseSettings(BaseSettings):
     POSTGRES_DB: str
     
     REDIS_HOST: str
-    REDIS_PORT: int
+    REDIS_PORT: str
 
     model_config = _base_config
 

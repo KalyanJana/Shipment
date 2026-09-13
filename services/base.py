@@ -17,11 +17,12 @@ class BaseService:
     async def _get(self, id: UUID):
         return await self.session.get(self.model, id)
 
-    async def _add(self, entity: SQLModel):
+    async def _add(self, entity: SQLModel, commit: bool=True):
         self.session.add(entity)
 
-        await self.session.commit()
-        await self.session.refresh(entity)
+        if commit:
+            await self.session.commit()
+            await self.session.refresh(entity)
 
         return entity
 
